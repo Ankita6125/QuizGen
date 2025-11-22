@@ -1,4 +1,4 @@
- QuizGen - AI Powered Quiz Generating Application
+** QuizGen - AI Powered Quiz Generating Application**
 
 
 
