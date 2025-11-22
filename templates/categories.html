@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Start Quiz - QuizGen{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-6 py-12">
+
+  <section class="mb-10 text-center">
+    <h1 class="text-4xl font-extrabold text-gray-900">🚀 Start New Quiz</h1>
+    <p class="text-gray-600 mt-2">Pick your category, subcategory, difficulty & questions</p>
+  </section>
+
+  <form method="get" id="quizForm"
+        onsubmit="
+          if (!this.category_id.value || !this.subcategory_id.value || !this.level.value || !this.count.value) {
+            alert('⚠️ Please select all options!');
+            return false;
+          }
+          this.action = '/start/' + this.category_id.value + '/' + this.subcategory_id.value + '/' + this.level.value + '/' + this.count.value + '/';
+          return true;
+        ">
+
+    <!-- Category Section -->
+    <section id="category-section" class="mb-10">
+      <h2 class="text-xl font-bold mb-4">📚 Select Category</h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for cat in categories %}
+          <div onclick="selectCategory('{{ cat.id }}')"
+               id="cat-{{ cat.id }}"
+               class="category-box cursor-pointer border rounded-2xl p-6 text-center shadow hover:shadow-lg transition bg-red-100">
+            <div class="text-3xl mb-2">🎓</div>
+            <h3 class="font-bold">{{ cat.name }}</h3>
+            <p class="text-sm text-gray-500">{{ cat.description }}</p>
+          </div>
+        {% endfor %}
+      </div>
+      <input type="hidden" name="category_id" id="category_id">
+    </section>
+
+    <!-- Subcategory Section -->
+    <section id="subcategory-section" class="mb-10 hidden">
+      <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold">🔖 Select Subcategory</h2>
+          <button type="button" onclick="showCategorySection()" class="back-button text-sm text-indigo-600 font-bold px-4 py-2 rounded-full hover:bg-gray-100 transition">
+              &larr; Back
+          </button>
+      </div>
+      <div id="subcategory-boxes" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      </div>
+      <input type="hidden" name="subcategory_id" id="subcategory_id">
+    </section>
+
+    <!-- Level Section -->
+    <section id="level-section" class="mb-10 hidden">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">⚡ Select Difficulty</h2>
+            <button type="button" onclick="showSubcategorySection()" class="back-button text-sm text-indigo-600 font-bold px-4 py-2 rounded-full hover:bg-gray-100 transition">
+                &larr; Back
+            </button>
+        </div>
+        <div class="grid grid-cols-3 gap-6">
+            <div onclick="selectLevel('easy')" id="level-easy"
+                 class="level-box cursor-pointer border rounded-2xl p-6 text-center shadow hover:shadow-lg transition bg-green-100">
+                <div class="text-2xl mb-2">🟢</div>
+                <h3 class="font-bold">Easy</h3>
+            </div>
+            <div onclick="selectLevel('medium')" id="level-medium"
+                 class="level-box cursor-pointer border rounded-2xl p-6 text-center shadow hover:shadow-lg transition bg-yellow-100">
+                <div class="text-2xl mb-2">🟡</div>
+                <h3 class="font-bold">Medium</h3>
+            </div>
+            <div onclick="selectLevel('hard')" id="level-hard"
+                 class="level-box cursor-pointer border rounded-2xl p-6 text-center shadow hover:shadow-lg transition bg-red-100">
+                <div class="text-2xl mb-2">🔴</div>
+                <h3 class="font-bold">Hard</h3>
+            </div>
+        </div>
+        <input type="hidden" name="level" id="level">
+    </section>
+
+    <!-- Count Section -->
+    <section id="count-section" class="mb-10 hidden">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">🔢 Number of Questions</h2>
+            <button type="button" onclick="showLevelSection()" class="back-button text-sm text-indigo-600 font-bold px-4 py-2 rounded-full hover:bg-gray-100 transition">
+                &larr; Back
+            </button>
+        </div>
+        <div class="grid grid-cols-3 gap-6">
+            <div onclick="selectCount(5)" id="count-5"
+                 class="count-box cursor-pointer border rounded-2xl p-6 text-center shadow hover:shadow-lg transition bg-blue-100">
+                <div class="text-2xl mb-2">5️⃣</div>
+                <h3 class="font-bold">5 Questions</h3>
+            </div>
+            <div onclick="selectCount(10)" id="count-10"
+                 class="count-box cursor-pointer border rounded-2xl p-6 text-center shadow hover:shadow-lg transition bg-blue-100">
+                <div class="text-2xl mb-2">🔟</div>
+                <h3 class="font-bold">10 Questions</h3>
+            </div>
+            <div id="count-custom-box"
+                 class="count-box cursor-pointer border rounded-2xl p-6 text-center shadow hover:shadow-lg transition bg-blue-100">
+                <div class="text-2xl mb-2">✍️</div>
+                <h3 class="font-bold">Custom</h3>
+                <input type="number" min="1" max="50" id="custom_count"
+                       class="mt-2 w-20 text-center bg-blue-100 border-none focus:ring-0 focus:outline-none"
+                       placeholder="e.g. 7"
+                       onclick="event.stopPropagation()"
+                       oninput="selectCustomCount(this.value)">
+            </div>
+        </div>
+        <input type="hidden" name="count" id="count">
+    </section>
+
+    <button type="submit" id="submit-button"
+            class="w-full mt-8 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:opacity-90 transition hidden">
+      🎯 Start Quiz
+    </button>
+  </form>
+</div>
+
+<style>
+    .zoom-in {
+        animation: zoomIn 0.5s ease-out forwards;
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    @keyframes zoomIn {
+        from {
+            transform: scale(0.9);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    /* Remove number input spinners */
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+        -webkit-appearance: none; 
+        margin: 0; 
+    }
+    input[type=number] {
+        -moz-appearance: textfield; /* Firefox */
+    }
+</style>
+
+<script>
+    let selectedCategory = null;
+    let selectedSubcategory = null;
+
+    // Show/Hide Functions
+    function showCategorySection() {
+        document.getElementById("category-section").classList.remove("hidden");
+        document.getElementById("subcategory-section").classList.add("hidden");
+        document.getElementById("level-section").classList.add("hidden");
+        document.getElementById("count-section").classList.add("hidden");
+        document.getElementById("submit-button").classList.add("hidden");
+    }
+
+    function showSubcategorySection() {
+        document.getElementById("category-section").classList.add("hidden");
+        document.getElementById("subcategory-section").classList.remove("hidden");
+        document.getElementById("subcategory-section").classList.add("zoom-in");
+        document.getElementById("level-section").classList.add("hidden");
+        document.getElementById("count-section").classList.add("hidden");
+        document.getElementById("submit-button").classList.add("hidden");
+    }
+
+    function showLevelSection() {
+        document.getElementById("category-section").classList.add("hidden");
+        document.getElementById("subcategory-section").classList.add("hidden");
+        document.getElementById("level-section").classList.remove("hidden");
+        document.getElementById("level-section").classList.add("zoom-in");
+        document.getElementById("count-section").classList.add("hidden");
+        document.getElementById("submit-button").classList.add("hidden");
+    }
+
+    function showCountSection() {
+        document.getElementById("category-section").classList.add("hidden");
+        document.getElementById("subcategory-section").classList.add("hidden");
+        document.getElementById("level-section").classList.add("hidden");
+        document.getElementById("count-section").classList.remove("hidden");
+        document.getElementById("count-section").classList.add("zoom-in");
+        document.getElementById("submit-button").classList.remove("hidden");
+    }
+
+    // Category selection
+    function selectCategory(catId) {
+        document.getElementById("category_id").value = catId;
+        selectedCategory = catId;
+
+        document.querySelectorAll(".category-box").forEach(el => el.classList.remove("ring-4", "ring-indigo-500"));
+        document.getElementById("cat-" + catId).classList.add("ring-4", "ring-indigo-500");
+
+        // Load subcategories dynamically
+        const subs = [
+            {% for cat in categories %}
+              {
+                id: "{{ cat.id }}",
+                subs: [
+                  {% for sub in cat.subcategories.all %}
+                    {id: "{{ sub.id }}", name: "{{ sub.name }}"},
+                  {% endfor %}
+                ]
+              },
+            {% endfor %}
+        ];
+
+        const box = document.getElementById("subcategory-boxes");
+        box.innerHTML = "";
+        const catSubs = subs.find(c => c.id === catId)?.subs || [];
+        if (catSubs.length === 0) {
+            box.innerHTML = '<p class="col-span-full text-gray-500">No subcategories available</p>';
+        } else {
+            catSubs.forEach(sub => {
+                const div = document.createElement("div");
+                div.className = "subcategory-box cursor-pointer border rounded-2xl p-6 text-center shadow hover:shadow-lg transition bg-orange-100";
+                div.innerHTML = `<div class='text-2xl mb-2'>📘</div><h3 class='font-bold'>${sub.name}</h3>`;
+                div.onclick = () => selectSubcategory(sub.id, div);
+                box.appendChild(div);
+            });
+        }
+        showSubcategorySection();
+    }
+
+    function selectSubcategory(subId, div) {
+        document.getElementById("subcategory_id").value = subId;
+        selectedSubcategory = subId;
+        document.querySelectorAll(".subcategory-box").forEach(el => el.classList.remove("ring-4", "ring-indigo-500"));
+        div.classList.add("ring-4", "ring-indigo-500");
+        showLevelSection();
+    }
+
+    function selectLevel(level) {
+        document.getElementById("level").value = level;
+        document.querySelectorAll(".level-box").forEach(el => el.classList.remove("ring-4", "ring-indigo-500"));
+        document.getElementById("level-" + level).classList.add("ring-4", "ring-indigo-500");
+        showCountSection();
+    }
+
+    // Count selection with custom input
+    const customBox = document.getElementById("count-custom-box");
+    const customInput = document.getElementById("custom_count");
+
+    customBox.addEventListener("click", () => {
+        selectCount(customInput.value || 1);
+        customInput.focus();
+    });
+
+    function selectCustomCount(val) {
+        selectCount(val);
+    }
+
+    function selectCount(val) {
+        document.getElementById("count").value = val;
+        document.querySelectorAll(".count-box").forEach(el => el.classList.remove("ring-4", "ring-indigo-500"));
+        if (val == 5 || val == 10) {
+            document.getElementById("count-" + val).classList.add("ring-4", "ring-indigo-500");
+        } else {
+            customBox.classList.add("ring-4", "ring-indigo-500");
+        }
+    }
+</script>
+{% endblock %}

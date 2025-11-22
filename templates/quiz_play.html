@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Play Quiz - QuizGen{% endblock %}
+
+{% block content %}
+  <!-- Main Content -->
+  <main class="flex justify-center items-start px-4 py-10">
+    <div class="w-full max-w-3xl bg-white rounded-xl p-8 animate-fadeIn neon-card">
+      <h1 class="text-2xl md:text-3xl font-bold mb-6 text-center text-gray-900">
+        🎯 Quiz Started
+      </h1>
+
+      <!-- Quiz Box -->
+      <div id="quiz-box">
+        <div id="question" class="text-lg md:text-xl font-semibold mb-6"></div>
+        <div id="options" class="mb-6"></div>
+
+        <!-- Navigation Buttons -->
+        <div class="flex justify-between gap-4">
+          <button id="prevBtn" 
+                  class="flex-1 py-3 rounded-lg bg-gray-400 hover:bg-gray-500 text-white font-semibold shadow transition transform hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed">
+            ⬅ Previous
+          </button>
+          <button id="nextBtn" 
+                  class="flex-1 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow transition transform hover:scale-105">
+            Next ➡
+          </button>
+          <button id="submitBtn" style="display:none;"
+                  class="flex-1 py-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold shadow transition transform hover:scale-105">
+            ✅ Submit
+          </button>
+        </div>
+      </div>
+
+      <!-- Hidden Submit Form -->
+      <form id="submitForm" action="{% url 'submit_quiz' %}" method="post" style="display:none;">
+        {% csrf_token %}
+      </form>
+    </div>
+  </main>
+
+  <style>
+    /* Fade-in animation for card and questions */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.6s ease-in-out;
+    }
+
+    /* Neon glow effect for quiz card */
+    .neon-card {
+      border: 2px solid rgba(230, 230, 230, 0.8); /* Indigo border */
+      box-shadow: 0 0 15px rgba(226, 226, 238, 0.7),
+                  0 0 30px rgba(251, 251, 254, 0.5);
+      transition: box-shadow 0.4s ease-in-out;
+    }
+    .neon-card:hover {
+      box-shadow: 0 0 25px rgba(247, 247, 247, 0.59),
+                  0 0 50px rgba(225, 225, 233, 0.59);
+    }
+  </style>
+
+  <script>
+  let currentIndex = 0;
+  let total = {{ total }};
+  let answers = {};
+
+  function loadQuestion(index) {
+    fetch(`/quiz/get/${index}/`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) return alert(data.error);
+
+        document.getElementById("question").innerText = `Q${index+1}: ${data.question}`;
+        let optionsDiv = document.getElementById("options");
+        optionsDiv.innerHTML = "";
+
+        for (let key in data.options) {
+          let opt = data.options[key];
+          let checked = answers[index] === key ? "checked" : "";
+          optionsDiv.innerHTML += `
+            <input type="radio" id="opt${key}" name="option" value="${key}" ${checked} class="hidden">
+            <label for="opt${key}" 
+                   class="option block px-4 py-3 mb-3 border rounded-lg cursor-pointer transition 
+                          border-gray-300 bg-white hover:border-indigo-400 hover:shadow-md hover:scale-[1.02] transform">
+              ${key}. ${opt}
+            </label>
+          `;
+        }
+
+        // Attach change events
+        document.querySelectorAll("#options input").forEach((input) => {
+          input.addEventListener("change", function () {
+            answers[index] = this.value;
+            // Reset all
+            document.querySelectorAll("#options label").forEach((lbl) => {
+              lbl.classList.remove("border-indigo-600", "bg-indigo-50", "shadow-lg");
+              lbl.classList.add("border-gray-300", "bg-white");
+            });
+            // Highlight selected
+            let selectedLabel = this.nextElementSibling;
+            selectedLabel.classList.remove("border-gray-300", "bg-white");
+            selectedLabel.classList.add("border-indigo-600", "bg-indigo-100", "shadow-lg");
+          });
+
+          // If already answered, highlight again
+          if (answers[index] && input.value === answers[index]) {
+            let selectedLabel = input.nextElementSibling;
+            selectedLabel.classList.remove("border-gray-300", "bg-white");
+            selectedLabel.classList.add("border-indigo-600", "bg-indigo-50", "shadow-lg");
+          }
+        });
+
+        // Buttons toggle
+        document.getElementById("prevBtn").disabled = (index === 0);
+        document.getElementById("nextBtn").style.display = (index === total-1) ? "none" : "inline-block";
+        document.getElementById("submitBtn").style.display = (index === total-1) ? "inline-block" : "none";
+      });
+  }
+
+  document.getElementById("prevBtn").addEventListener("click", () => {
+    if (currentIndex > 0) {
+      currentIndex--;
+      loadQuestion(currentIndex);
+    }
+  });
+
+  document.getElementById("nextBtn").addEventListener("click", () => {
+    if (currentIndex < total-1) {
+      currentIndex++;
+      loadQuestion(currentIndex);
+    }
+  });
+
+  document.getElementById("submitBtn").addEventListener("click", () => {
+    let form = document.getElementById("submitForm");
+    for (let i in answers) {
+      let inp = document.createElement("input");
+      inp.type = "hidden";
+      inp.name = i;
+      inp.value = answers[i];
+      form.appendChild(inp);
+    }
+    form.submit();
+  });
+
+  loadQuestion(currentIndex);
+  </script>
+{% endblock %}

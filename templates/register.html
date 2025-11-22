@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      color: #333;
+    }
+
+    .register-container {
+      background: #fff;
+      padding: 40px 30px;
+      border-radius: 20px;
+      border: 2px solid #6366f1;
+      box-shadow: 0 12px 30px rgba(99, 102, 241, 0.3);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .register-container:hover {
+      transform: scale(1.02);
+      box-shadow: 0 16px 40px rgba(99, 102, 241, 0.4);
+    }
+
+    .register-container h2 {
+      margin-bottom: 20px;
+      font-size: 28px;
+      color: #4338ca;
+      font-weight: 700;
+    }
+
+    .register-container h2::before {
+      content: "📝 ";
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .password-field {
+      position: relative;
+    }
+
+    form input {
+      padding: 12px;
+      border: 2px solid #cbd5e1;
+      border-radius: 10px;
+      background: #f8fafc;
+      font-size: 15px;
+      transition: all 0.3s;
+      width: 100%;
+    }
+
+    form input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
+      outline: none;
+      background: #fff;
+    }
+
+    .toggle-eye {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 18px;
+      user-select: none;
+    }
+
+    button {
+      padding: 14px;
+      background: linear-gradient(90deg, #6366f1, #4f46e5);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(99, 102, 241, 0.5);
+    }
+
+    p {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    p a {
+      color: #4f46e5;
+      font-weight: 600;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    p a:hover {
+      color: #6366f1;
+      text-decoration: underline;
+    }
+
+    /* Password Rules */
+    .password-rules {
+      display: none;
+      text-align: left;
+      margin-top: 15px;
+      font-size: 14px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .password-rules li {
+      margin: 6px 0;
+      list-style: none;
+    }
+
+    .valid::before {
+      content: "✅ ";
+    }
+
+    .invalid::before {
+      content: "❌ ";
+    }
+
+    .valid {
+      color: #16a34a;
+      font-weight: 500;
+    }
+
+    .invalid {
+      color: #dc2626;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-container">
+    <h2>Create Account</h2>
+    <form method="post" onsubmit="return validateForm(event)">
+      {% csrf_token %}
+      
+      <input type="email" name="email" placeholder="📧 Email" required>
+
+      <!-- Password with eye -->
+      <div class="password-field">
+        <input type="password" name="password1" placeholder="🔑 Password" required id="password1">
+        <span class="toggle-eye" onclick="togglePassword('password1', this)">👁️</span>
+      </div>
+
+      <!-- Confirm password with eye -->
+      <div class="password-field">
+        <input type="password" name="password2" placeholder="🔒 Confirm Password" required id="password2">
+        <span class="toggle-eye" onclick="togglePassword('password2', this)">👁️</span>
+      </div>
+      
+      <!-- Password rules -->
+      <ul class="password-rules" id="rules">
+        <li id="length" class="invalid">At least 8 characters</li>
+        <li id="uppercase" class="invalid">At least 1 uppercase letter</li>
+        <li id="lowercase" class="invalid">At least 1 lowercase letter</li>
+        <li id="number" class="invalid">At least 1 number</li>
+        <li id="special" class="invalid">At least 1 special character</li>
+        <li id="match" class="invalid">Passwords must match</li>
+      </ul>
+
+      <button type="submit">Sign Up 🚀</button>
+    </form>
+
+    <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+  </div>
+
+  <script>
+    function togglePassword(fieldId, eyeIcon) {
+      const input = document.getElementById(fieldId);
+      if (input.type === "password") {
+        input.type = "text";
+        eyeIcon.textContent = "🙈"; // Change icon when visible
+      } else {
+        input.type = "password";
+        eyeIcon.textContent = "👁️"; // Back to eye
+      }
+    }
+
+    function validateForm(event) {
+      const password1 = document.querySelector('[name="password1"]').value;
+      const password2 = document.querySelector('[name="password2"]').value;
+      const rulesBox = document.getElementById('rules');
+      rulesBox.style.display = "block"; // Show rules only after submit
+
+      // Validate rules
+      document.getElementById('length').className = password1.length >= 8 ? "valid" : "invalid";
+      document.getElementById('uppercase').className = /[A-Z]/.test(password1) ? "valid" : "invalid";
+      document.getElementById('lowercase').className = /[a-z]/.test(password1) ? "valid" : "invalid";
+      document.getElementById('number').className = /[0-9]/.test(password1) ? "valid" : "invalid";
+      document.getElementById('special').className = /[!@#$%^&*(),.?":{}|<>]/.test(password1) ? "valid" : "invalid";
+      document.getElementById('match').className = password1 === password2 ? "valid" : "invalid";
+
+      if (document.querySelectorAll(".invalid").length > 0) {
+        event.preventDefault();
+        return false;
+      }
+      return true;
+    }
+  </script>
+</body>
+</html>

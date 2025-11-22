@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      color: #333;
+    }
+
+    .login-container {
+      background: #fff;
+      padding: 40px 30px;
+      border-radius: 20px;
+      border: 2px solid #6366f1;
+      box-shadow: 0 12px 30px rgba(99, 102, 241, 0.3);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .login-container:hover {
+      transform: scale(1.02);
+      box-shadow: 0 16px 40px rgba(99, 102, 241, 0.4);
+    }
+
+    .login-container h2 {
+      margin-bottom: 20px;
+      font-size: 28px;
+      color: #4338ca;
+      font-weight: 700;
+    }
+
+    .login-container h2::before {
+      content: "🔑 ";
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      text-align: left;
+    }
+
+    form input {
+      padding: 12px;
+      border: 2px solid #cbd5e1;
+      border-radius: 10px;
+      background: #f8fafc;
+      font-size: 15px;
+      transition: all 0.3s;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    form input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
+      outline: none;
+      background: #fff;
+    }
+
+    /* Password input wrapper */
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-wrapper input {
+      padding-right: 40px; /* space for eye */
+    }
+
+    .toggle-eye {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 18px;
+      user-select: none;
+      color: #555;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 14px;
+      background: linear-gradient(90deg, #6366f1, #4f46e5);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      width: 100%;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(99, 102, 241, 0.5);
+    }
+
+    p {
+      margin-top: 15px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    p a {
+      color: #4f46e5;
+      font-weight: 600;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    p a:hover {
+      color: #6366f1;
+      text-decoration: underline;
+    }
+
+    /* Labels ko hide kar dete hain */
+    label {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Login</h2>
+    <form method="post">
+      {% csrf_token %}
+
+      <!-- Username input -->
+      {{ form.username }}
+
+      <!-- Password with eye -->
+      <div class="password-wrapper">
+        {{ form.password }}
+        <span class="toggle-eye" onclick="togglePassword()">👁️</span>
+      </div>
+
+      <button type="submit">Login 🚀</button>
+    </form>
+
+    <p>Don’t have an account? <a href="{% url 'register' %}">Register</a></p>
+  </div>
+
+  <script>
+    function togglePassword() {
+      const passwordInput = document.getElementById("id_password");
+      const eyeIcon = document.querySelector(".toggle-eye");
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        eyeIcon.textContent = "🙈";
+      } else {
+        passwordInput.type = "password";
+        eyeIcon.textContent = "👁️";
+      }
+    }
+  </script>
+</body>
+</html>

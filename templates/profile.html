@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Profile | QuizGen{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+  <!-- Left: Profile Card + Social Sharing -->
+  <div class="bg-gradient-to-r from-orange-100 via-rose-50 to-pink-100 shadow-xl rounded-2xl p-8 text-center relative">
+
+    <!-- Avatar -->
+    <div class="relative w-40 h-40 mx-auto">
+      <img src="{{ avatar }}" alt="Avatar"
+           class="w-40 h-40 rounded-full border-4 border-indigo-300 object-cover shadow-lg" id="avatar-preview">
+
+      <input type="file" id="avatar-input" class="hidden" accept="image/*" onchange="previewAvatar(event)">
+      <button onclick="document.getElementById('avatar-input').click()"
+              class="absolute bottom-2 right-2 bg-indigo-600 text-white p-3 rounded-full shadow hover:bg-indigo-700 transition">
+        <i data-lucide="pencil" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Name -->
+    <div class="mt-5 flex items-center justify-center gap-2">
+      <h2 id="name-display" class="text-2xl font-bold text-gray-800">{{ name }}</h2>
+      <button onclick="makeEditable('name')" class="text-gray-500 hover:text-indigo-600">
+        <i data-lucide="pencil" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Email -->
+    <div class="flex items-center justify-center gap-2 mt-2">
+      <p id="email-display" class="text-base font-medium text-gray-600">{{ email }}</p>
+      <button onclick="makeEditable('email')" class="text-gray-400 hover:text-indigo-600">
+        <i data-lucide="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- Bio -->
+    <div class="flex items-center gap-2 justify-center mt-3">
+      <p id="bio-display" class="text-sm text-gray-600 italic">
+        {{ user.profile.bio|default:"No bio added yet..." }}
+      </p>
+      <button onclick="makeEditable('bio')" class="text-gray-400 hover:text-indigo-600">
+        <i data-lucide="pencil" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- Join date -->
+    <p class="mt-4 text-xs text-gray-400">
+      Joined on {{ user.date_joined|date:"M d, Y" }}
+    </p>
+
+    <!-- Logout -->
+    <a href="{% url 'logout' %}" 
+       class="mt-5 inline-block bg-red-500 text-white px-5 py-2 rounded-lg shadow hover:bg-red-600 transition">
+       Logout
+    </a>
+
+    <!-- Social Sharing -->
+    <div class="mt-6 space-y-2">
+      <p class="text-gray-600 font-medium mb-2">Share your profile:</p>
+      <div class="flex justify-center gap-3">
+        <a href="#" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">Facebook</a>
+        <a href="#" class="bg-blue-400 text-white px-4 py-2 rounded-lg hover:bg-blue-500 transition">Twitter</a>
+        <a href="#" class="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 transition">Instagram</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Stats + Achievements + Recent -->
+  <div class="lg:col-span-2 space-y-6">
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <!-- Best Score -->
+      <div class="bg-gradient-to-r from-green-400 to-green-600 text-white rounded-xl p-6 text-center shadow-lg transform transition hover:scale-105 hover:shadow-2xl border border-green-200">
+        <i data-lucide="award" class="w-7 h-7 mx-auto mb-2"></i>
+        <h3 class="text-lg font-semibold">Best Score</h3>
+        <p class="mt-2 text-3xl font-bold">{{ best_score }}%</p>
+      </div>
+
+      <!-- Quizzes Attempted -->
+      <div class="bg-gradient-to-r from-pink-400 to-pink-600 text-white rounded-xl p-6 text-center shadow-lg transform transition hover:scale-105 hover:shadow-2xl border border-blue-200">
+        <i data-lucide="book-open-check" class="w-7 h-7 mx-auto mb-2"></i>
+        <h3 class="text-lg font-semibold">Quizzes Attempted</h3>
+        <p class="mt-2 text-3xl font-bold">{{ attempted }}</p>
+      </div>
+
+      <!-- Accuracy -->
+      <div class="bg-gradient-to-r from-purple-400 to-purple-600 text-white rounded-xl p-6 text-center shadow-lg transform transition hover:scale-105 hover:shadow-2xl border border-purple-200">
+        <i data-lucide="target" class="w-7 h-7 mx-auto mb-2"></i>
+        <h3 class="text-lg font-semibold">Accuracy</h3>
+        <p class="mt-2 text-3xl font-bold">{{ accuracy_rate }}%</p>
+      </div>
+    </div>
+
+    <!-- Achievements / Badges -->
+    <div class="bg-yellow-100 shadow-md rounded-xl p-6 border border-yellow-200 transform transition hover:scale-105 hover:shadow-lg">
+      <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+        <i data-lucide="award" class="w-5 h-5 mr-2 text-yellow-600"></i> Achievements
+      </h3>
+      {% if badges %}
+        <div class="flex flex-wrap gap-4">
+          {% for b in badges %}
+            <div class="flex items-center bg-white px-4 py-2 rounded-lg shadow hover:scale-105 transition border border-gray-200">
+              <span class="text-2xl mr-2">{{ b.icon }}</span>
+              <div>
+                <p class="font-semibold text-gray-700">{{ b.name }}</p>
+                <p class="text-xs text-gray-500">{{ b.description }}</p>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-gray-500 text-sm">No badges earned yet. Keep practicing 🚀</p>
+      {% endif %}
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-gradient-to-r from-pink-100 via-purple-100 to-indigo-100 shadow-md rounded-xl p-6 border border-indigo-200 transform transition hover:scale-105 hover:shadow-lg">
+      <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center">
+        <i data-lucide="activity" class="w-5 h-5 mr-2 text-indigo-600"></i> Recent Activity
+      </h3>
+      {% if recent_history %}
+        <ul class="divide-y divide-gray-300">
+          {% for h in recent_history %}
+            <li class="py-3 flex justify-between items-center hover:bg-white rounded px-2 transition">
+              <span class="text-gray-700 text-sm">
+                {{ h.quiz.title }} 
+                <span class="text-gray-400">({{ h.completed_at|date:"M d, Y H:i" }})</span>
+              </span>
+              <span class="font-semibold {% if h.score >= 40 %}text-green-600{% else %}text-red-600{% endif %}">
+                {{ h.score }}%
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-gray-500 text-sm">No quiz history yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+
+  function previewAvatar(event) {
+    const reader = new FileReader();
+    reader.onload = function(){
+      document.getElementById("avatar-preview").src = reader.result;
+    }
+    reader.readAsDataURL(event.target.files[0]);
+  }
+
+  function makeEditable(field) {
+    let displayEl = document.getElementById(field + "-display");
+    let currentValue = displayEl.innerText.trim();
+    displayEl.outerHTML = `
+      <input id="${field}-input" type="text" 
+             value="${currentValue}" 
+             class="border border-gray-300 rounded px-2 py-1 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    `;
+    let inputEl = document.getElementById(field + "-input");
+    inputEl.focus();
+    inputEl.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        saveField(field, inputEl.value);
+      }
+    });
+  }
+
+  function saveField(field, newValue) {
+    document.getElementById(field + "-input").outerHTML = `
+      <p id="${field}-display" class="text-base font-medium text-gray-700">${newValue}</p>
+    `;
+    // TODO: send AJAX to backend to persist
+  }
+</script>
+{% endblock %}

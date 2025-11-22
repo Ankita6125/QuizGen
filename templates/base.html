@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Quiz App{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .brand-text { transition: all 0.3s ease; }
+    .brand-text:hover { text-shadow: 0 0 12px rgba(255,255,255,0.8); transform: scale(1.05); }
+
+    .nav-link { position: relative; padding: 0.5rem 1rem; border-radius: 0.5rem; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; }
+    .nav-link:hover { transform: scale(1.08); background: rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+
+    .logout-link:hover { background: rgba(223,166,80,0.98); color:white; box-shadow:0 4px 12px rgba(239,68,68,0.6); }
+
+    #ai-assistant div { box-shadow: 0 0 15px rgba(128,0,255,0.6); }
+    .ai-header { box-shadow: 0 0 20px rgba(128,0,255,0.7); }
+  </style>
+</head>
+<body class="bg-gray-50">
+
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-50 bg-gradient-to-r from-indigo-700 via-purple-700 to-violet-700 text-white shadow-2xl">
+    <div class="max-w-7xl mx-auto flex justify-between items-center px-8 py-4">
+      <div class="flex items-center space-x-3">
+        <span class="text-3xl">🧠</span>
+        <span class="font-extrabold text-2xl tracking-wide brand-text">QuizGen</span>
+      </div>
+      <div class="space-x-3 font-medium text-lg flex items-center">
+        <a href="{% url 'dashboard' %}" class="nav-link"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>
+        <a href="{% url 'categories' %}" class="nav-link"><i data-lucide="play-circle" class="w-5 h-5"></i> Start Quiz</a>
+        <a href="{% url 'history' %}" class="nav-link"><i data-lucide="history" class="w-5 h-5"></i> History</a>
+        <a href="{% url 'profile' %}" class="nav-link"><i data-lucide="user" class="w-5 h-5"></i> Profile</a>
+        <a href="{% url 'logout' %}" class="nav-link logout-link"><i data-lucide="log-out" class="w-5 h-5"></i> Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto p-6 animate-fadeIn">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- AI Assistant Icon -->
+  <div id="ai-assistant" class="fixed bottom-6 right-6 z-50 cursor-pointer">
+    <div class="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform animate-bounce">
+      <span class="text-white text-3xl">🤖</span>
+    </div>
+  </div>
+
+  <!-- AI Sidebar -->
+  <div id="ai-sidebar" class="fixed right-6 w-80 bg-white shadow-2xl z-50 rounded-lg overflow-hidden flex flex-col transition-transform" style="top:20px; bottom:80px; transform:translateX(120%);">
+    <div class="p-3 bg-purple-600 text-white font-bold flex justify-between items-center ai-header">
+      <span>AI Assistant</span>
+      <button id="close-ai" class="text-white text-xl font-bold">&times;</button>
+    </div>
+
+    <!-- Chat Content -->
+    <div id="chat-content" class="p-4 flex-1 overflow-y-auto flex flex-col space-y-3">
+      <p class="text-gray-500 text-sm text-center">Say hi to your AI assistant!</p>
+    </div>
+
+    <!-- Input -->
+    <div class="p-4 border-t flex gap-2">
+      <input type="text" id="ai-input" placeholder="Type a message..." class="w-full border rounded p-2">
+      <button id="send-btn" class="bg-purple-600 text-white px-4 rounded hover:bg-purple-700">Send</button>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const aiIcon = document.getElementById('ai-assistant');
+    const aiSidebar = document.getElementById('ai-sidebar');
+    const closeBtn = document.getElementById('close-ai');
+    const inputField = document.getElementById('ai-input');
+    const sendBtn = document.getElementById('send-btn');
+    const chatContent = document.getElementById('chat-content');
+
+    // Sidebar toggle
+    aiIcon.addEventListener('click', () => {
+      aiSidebar.style.transform = 'translateX(0%)';
+      inputField.focus();
+    });
+    closeBtn.addEventListener('click', () => {
+      aiSidebar.style.transform = 'translateX(120%)';
+    });
+
+    // Send message
+    async function sendMessage() {
+      const userMessage = inputField.value.trim();
+      if (!userMessage) return;
+      inputField.value = "";
+
+      // User bubble (right side)
+      const userBubble = document.createElement('div');
+      userBubble.className = "flex justify-end";
+      userBubble.innerHTML = `
+        <div class="bg-blue-500 text-white px-3 py-2 rounded-xl max-w-[70%]">
+          ${userMessage}
+        </div>
+      `;
+      chatContent.appendChild(userBubble);
+      chatContent.scrollTop = chatContent.scrollHeight;
+
+      try {
+        const res = await fetch("/chat/", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({message: userMessage})
+        });
+        const data = await res.json();
+
+        // AI bubble (left side with icon)
+        const aiBubble = document.createElement('div');
+        aiBubble.className = "flex items-start gap-2";
+        aiBubble.innerHTML = `
+          <span class="text-2xl">🤖</span>
+          <div class="bg-gray-200 text-gray-800 px-3 py-2 rounded-xl max-w-[70%]">
+            ${data.response}
+          </div>
+        `;
+        chatContent.appendChild(aiBubble);
+        chatContent.scrollTop = chatContent.scrollHeight;
+      } catch (err) {
+        const errBubble = document.createElement('div');
+        errBubble.className = "flex items-start gap-2";
+        errBubble.innerHTML = `
+          <span class="text-2xl">🤖</span>
+          <div class="bg-red-200 text-red-800 px-3 py-2 rounded-xl max-w-[70%]">
+            Error contacting AI.
+          </div>
+        `;
+        chatContent.appendChild(errBubble);
+        chatContent.scrollTop = chatContent.scrollHeight;
+      }
+    }
+
+    inputField.addEventListener('keydown', (e) => { if(e.key==="Enter") sendMessage(); });
+    sendBtn.addEventListener('click', sendMessage);
+  </script>
+
+</body>
+</html>

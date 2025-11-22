@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz History - QuizGen{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold text-gray-900 mb-8 flex items-center justify-center gap-2">
+  📊 Quiz History
+</h1>
+
+<!-- Filters -->
+<div class="mb-4 flex flex-wrap gap-4 justify-between items-center">
+  <select id="categoryFilter" onchange="filterTable()"
+          class="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <option value="">All Categories</option>
+    {% for cat in categories %}
+      <option value="{{ cat.name }}">{{ cat.name }}</option>
+    {% endfor %}
+  </select>
+
+  <select id="subcategoryFilter" onchange="filterTable()"
+          class="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <option value="">All Subcategories</option>
+    {% for sub in subcategories %}
+      <option value="{{ sub.name }}">{{ sub.name }}</option>
+    {% endfor %}
+  </select>
+
+  <select id="difficultyFilter" onchange="filterTable()"
+          class="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <option value="">All Difficulty</option>
+    <option value="easy">Easy</option>
+    <option value="medium">Medium</option>
+    <option value="hard">Hard</option>
+  </select>
+
+  <input type="number" id="questionFilter" placeholder="Min Questions"
+         class="px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+         onkeyup="filterTable()">
+</div>
+
+<!-- Table -->
+<div class="rounded-2xl shadow-2xl border border-gray-100 bg-white overflow-hidden">
+  <table class="w-full text-sm text-left">
+    <thead class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold shadow-md">
+      <tr>
+        <th class="px-6 py-4">Category</th>
+        <th class="px-6 py-4">Subcategory</th>
+        <th class="px-6 py-4">Difficulty</th>
+        <th class="px-6 py-4 text-center">Score</th>
+        <th class="px-6 py-4 text-center">Correct / Total</th>
+        <th class="px-6 py-4">Date Completed</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for h in history %}
+      <tr class="border-b border-gray-200 last:border-0 transition-all duration-300 ease-in-out hover:bg-gray-50 hover:shadow-lg">
+        <td class="px-6 py-4">{{ h.quiz.category.name }}</td>
+        <td class="px-6 py-4">{{ h.quiz.subcategory.name }}</td>
+        <td class="px-6 py-4">
+          {% if h.quiz.difficulty == "easy" %} 🔹 Easy
+          {% elif h.quiz.difficulty == "medium" %} 🔸 Medium
+          {% else %} 🔺 Hard
+          {% endif %}
+        </td>
+        <td class="px-6 py-4 text-center">
+          {% if h.score >= 80 %}
+            <span class="inline-flex items-center px-4 py-1.5 bg-green-500 text-white rounded-full font-bold text-xs shadow-sm">
+              🎉 {{ h.score }}%
+            </span>
+          {% elif h.score >= 50 %}
+            <span class="inline-flex items-center px-4 py-1.5 bg-yellow-500 text-white rounded-full font-bold text-xs shadow-sm">
+              🙂 {{ h.score }}%
+            </span>
+          {% else %}
+            <span class="inline-flex items-center px-4 py-1.5 bg-red-500 text-white rounded-full font-bold text-xs shadow-sm">
+              😢 {{ h.score }}%
+            </span>
+          {% endif %}
+        </td>
+        <td class="px-6 py-4 text-center text-gray-700">{{ h.correct_answers }} / {{ h.total_questions }}</td>
+        <td class="px-6 py-4 text-gray-600">{{ h.completed_at|date:"M d, Y H:i" }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="px-6 py-8 text-center text-gray-400 italic">
+          No history found.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination Controls -->
+{% if history.has_other_pages %}
+<div class="mt-6 flex justify-center space-x-2">
+  {% if history.has_previous %}
+    <a href="?page={{ history.previous_page_number }}" 
+       class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">&laquo; Prev</a>
+  {% endif %}
+
+  {% for num in history.paginator.page_range %}
+    {% if num == history.number %}
+      <span class="px-3 py-1 rounded bg-blue-600 text-white">{{ num }}</span>
+    {% else %}
+      <a href="?page={{ num }}" 
+         class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">{{ num }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if history.has_next %}
+    <a href="?page={{ history.next_page_number }}" 
+       class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300">Next &raquo;</a>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="mt-12 text-center">
+  <a href="{% url 'dashboard' %}" 
+     class="inline-block px-8 py-4 bg-blue-600 text-white rounded-full shadow-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300">
+    ⬅ Back to Dashboard
+  </a>
+</div>
+
+<!-- JS Filtering -->
+<script>
+function filterTable() {
+  const category = document.getElementById('categoryFilter').value.toLowerCase();
+  const subcategory = document.getElementById('subcategoryFilter').value.toLowerCase();
+  const difficulty = document.getElementById('difficultyFilter').value.toLowerCase();
+  const minQuestions = parseInt(document.getElementById('questionFilter').value) || 0;
+
+  const rows = document.querySelectorAll('table tbody tr');
+
+  rows.forEach(row => {
+    const tCategory = row.cells[0].textContent.toLowerCase();
+    const tSub = row.cells[1].textContent.toLowerCase();
+    const tDifficulty = row.cells[2].textContent.toLowerCase();
+    const tCorrect = parseInt(row.cells[4].textContent.split("/")[1]) || 0;
+
+    const show = (category === '' || tCategory === category) &&
+                 (subcategory === '' || tSub === subcategory) &&
+                 (difficulty === '' || tDifficulty.includes(difficulty)) &&
+                 tCorrect >= minQuestions;
+
+    row.style.display = show ? '' : 'none';
+  });
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,12 @@
+/* Login logo size */
+.login-logo img {
+    width: 180px;
+    height: auto;
+}
+
+/* Site logo size */
+.site-logo img {
+    width: 50px;
+    height: auto;
+    border-radius: 50%;
+}
